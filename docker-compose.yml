@@ -4,7 +4,7 @@ version: '3'
 services:
     ldap_sync:
         build:
-            context: ../bitwarden_rs_ldap/
+            context: ./bitwarden_rs_ldap/
             # dockerfile: Dockerfile.alpine
         volumes:
             - /home/joh/bitwarden_rs_ldap/config.toml:/usr/src/bitwarden_rs_ldap/config.toml:ro
