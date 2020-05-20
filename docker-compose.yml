@@ -1,0 +1,96 @@
+version: '3'
+
+
+services:
+##    ldap_sync:
+##        build:
+##            context: ../bitwarden_rs_ldap/
+##            # dockerfile: Dockerfile.alpine
+##        volumes:
+##            - /home/joh/bitwarden_rs_ldap/config.toml:/usr/src/bitwarden_rs_ldap/config.toml:ro
+##        environment:
+##            RUST_BACKTRACE: 1
+##        restart: always
+
+    ldap-host:
+        image: osixia/openldap:latest
+        container_name: ldap-service
+        networks:
+            mynet:
+        environment:
+            - LDAP_ORGANISATION="HC-Shop"
+            - LDAP_DOMAIN=hc-intern.local
+            - LDAP_ADMIN_PASSWORD=Admin123!
+            - LDAP_BASE_DN=dc=hc-intern,dc=local
+        volumes:
+            - /data/slapd/database/:/var/lib/ldap
+            - /data/slapd/config/:/etc/ldap/slapd.d
+            
+    ldap-admin:
+        image: osixia/phpldapadmin:latest
+        networks:
+            mynet:
+        container_name: phpldapadmin
+        ports:
+            - "6080:80"
+##            - "6080:443"
+        environment:
+            - PHPLDAPADMIN_LDAP_HOSTS=ldap-host
+            - PHPLDAPADMIN_HTTPS=false
+
+    web:
+        image: nginx
+        container_name: nginx-server
+        ports:
+            - "83:80"
+
+    web2:
+        image: ubuntu_apache2
+        container_name: apache-server
+        ports:
+            - "85:80"       
+    db:
+        image: mysql
+        container_name: mediawiki-mysql
+        ports:
+            - "3306:3306"
+        volumes:
+            - mediawiki-mysql:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD="password1"
+            - MYSQL_USER="user"
+            - MYSQL_PASSWORD="password2"
+            - MYSQL_DATABASE="demodb"
+        networks:
+            mediawiki:
+    SMTP:
+        image: namshi/smtp
+        container_name: mediawiki-server-smtp
+        networks:
+            mediawiki:
+        
+            
+    bitwarden:
+        image: hc/shop/bitwardenrs:latest
+        container_name: bitwarden
+        ports:
+            - "443:80"
+        volumes:
+            - /ssl/:/ssl/
+            - /bw-data/:/data/
+
+    mediawiki:
+        image: hc/shop/mediawiki:latest
+        container_name: mediawiki-server
+        ports:
+            - "8080:80"
+        networks:
+            mediawiki:
+volumes:
+    mediawiki-mysql:
+    
+networks:
+    mynet:
+        driver: bridge
+    mediawiki:
+        driver: bridge
