@@ -1,0 +1,41 @@
+version: '3'
+services:
+  ldap_sync:
+    build:
+      context: ../bitwarden_rs_ldap/
+      # dockerfile: Dockerfile.alpine
+    volumes:
+      - ./example.config.toml:/usr/src/bitwarden_rs_ldap/config.toml:ro
+    environment:
+      RUST_BACKTRACE: 1
+    restart: always
+
+  bitwarden:
+    image: bitwardenrs/server:latest
+    ports:
+      - 8000:80
+    environment:
+      ADMIN_TOKEN: admin
+      SIGNUPS_ALLOWED: 'false'
+      INVITATIONS_ALLOWED: 'true'
+
+  ldap:
+    image: osixia/openldap
+    ports:
+      - 389:389
+      - 636:636
+    volumes:
+      - /var/lib/ldap
+      - /etc/ldap/slapd.d
+    environment:
+      LDAP_READONLY_USER: 'true'
+      LDAP_READONLY_USER_USERNAME: readonly
+      LDAP_READONLY_USER_PASSWORD: readonly
+
+  ldap_admin:
+    image: osixia/phpldapadmin
+    ports:
+      - 8001:80
+    environment:
+      PHPLDAPADMIN_HTTPS: 'false'
+      PHPLDAPADMIN_LDAP_HOSTS: ldap
