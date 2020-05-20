@@ -2,15 +2,21 @@ version: '3'
 
 
 services:
-##    ldap_sync:
-##        build:
-##            context: ../bitwarden_rs_ldap/
-##            # dockerfile: Dockerfile.alpine
-##        volumes:
-##            - /home/joh/bitwarden_rs_ldap/config.toml:/usr/src/bitwarden_rs_ldap/config.toml:ro
-##        environment:
-##            RUST_BACKTRACE: 1
-##        restart: always
+    ldap_sync:
+        build:
+            context: ../bitwarden_rs_ldap/
+            # dockerfile: Dockerfile.alpine
+        volumes:
+            - /home/joh/bitwarden_rs_ldap/config.toml:/usr/src/bitwarden_rs_ldap/config.toml:ro
+        environment:
+            RUST_BACKTRACE: 1
+        restart: always
+
+## start openldap on network >>mynet
+##  Environment variable: - LDAP_ORGANISATION="HC-Shop"
+##  - LDAP_DOMAIN=hc-intern.local
+##  - LDAP_ADMIN_PASSWORD=Admin123!
+##  - LDAP_BASE_DN=dc=hc-intern,dc=local
 
     ldap-host:
         image: osixia/openldap:latest
@@ -33,7 +39,7 @@ services:
         container_name: phpldapadmin
         ports:
             - "6080:80"
-##            - "6080:443"
+            - "6443:443"
         environment:
             - PHPLDAPADMIN_LDAP_HOSTS=ldap-host
             - PHPLDAPADMIN_HTTPS=false
@@ -75,6 +81,7 @@ services:
         container_name: bitwarden
         ports:
             - "443:80"
+            - "480:80"
         volumes:
             - /ssl/:/ssl/
             - /bw-data/:/data/
